@@ -1,7 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
 import s from './RegisterForm.module.scss';
 
 export default function RegisterForm() {
