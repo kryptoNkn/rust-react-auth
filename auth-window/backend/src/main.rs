@@ -17,7 +17,7 @@ struct RegisterData {
 async fn register(data: web::Json<RegisterData>) -> impl Responder {
     match data.validate() {
         Ok(_) => HttpResponse::Ok().json(format!("User {} registered", data.username)),
-        Err(e) => HttpResponse::BadRequest().json(format!("Validation error: {}", e))
+        Err(e) => HttpResponse::BadRequest().json(format!("Validation error: {}", e)),
     }
 }
 
@@ -25,13 +25,13 @@ async fn register(data: web::Json<RegisterData>) -> impl Responder {
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-        .wrap(
-            Cors::default()
-            .allow_any_origin()
-            .allow_any_method()
-            .allow_any_header()
-        )
-        .service(register)
+            .wrap(
+                Cors::default()
+                    .allow_any_origin()
+                    .allow_any_method()
+                    .allow_any_header()
+            )
+            .service(register)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

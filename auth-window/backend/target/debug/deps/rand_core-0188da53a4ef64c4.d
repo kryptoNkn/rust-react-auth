@@ -1,0 +1,11 @@
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/deps/rand_core-0188da53a4ef64c4.d: /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/lib.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/block.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/impls.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/le.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/os.rs
+
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/deps/librand_core-0188da53a4ef64c4.rlib: /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/lib.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/block.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/impls.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/le.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/os.rs
+
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/deps/librand_core-0188da53a4ef64c4.rmeta: /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/lib.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/block.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/impls.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/le.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/os.rs
+
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/lib.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/block.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/impls.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/le.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rand_core-0.9.3/src/os.rs:
