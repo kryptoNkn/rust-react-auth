@@ -21,8 +21,6 @@ async fn register(data: web::Json<RegisterData>) -> impl Responder {
     }
 }
 
-
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
