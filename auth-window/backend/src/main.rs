@@ -59,7 +59,6 @@ async fn register(data: web::Json<RegisterData>) -> impl Responder {
         "message": format!("User {} registered", data.username),
         "user_id": user_id,
         "token": token,
-        "hashed_password": hashed_password
     }))
 }
 
