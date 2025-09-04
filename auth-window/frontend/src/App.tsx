@@ -1,9 +1,9 @@
 import RegisterForm from "./RegisterForm";
+import s from "../src/App.module.scss";
 
 function App() {
   return (
-    <div className="App">
-      <h1>Register</h1>
+    <div className={s.App}>
       <RegisterForm />
     </div>
   );

@@ -1,53 +1,94 @@
 .formContainer {
+  width: 100%;
   max-width: 400px;
-  margin: 50px auto;
-  padding: 20px;
-  border-radius: 10px;
+  margin: 80px auto;
+  padding: 30px 25px;
+  border-radius: 12px;
   border: 1px solid #ddd;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background: #fff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 15px;
-  background-color: #fff;
+}
+
+.titles {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 30px;
+  gap: 5px;
+
+  h1, h3 {
+    text-align: center;
+    font-weight: 600;
+    margin: 0;
+  }
+}
+
+input {
+  padding: 12px 15px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  width: 280px;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 4px rgba(0,123,255,0.4);
+  }
+}
+
+.passwordWrapper {
+  position: relative;
+  width: 280px;
+  display: flex;
+  align-items: center;
 
   input {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 16px;
     width: 100%;
-    box-sizing: border-box;
+    padding-right: 70px;
   }
 
-  .passwordWrapper {
-    position: relative;
-
-    button {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: #007bff;
-      cursor: pointer;
-      font-size: 14px;
-    }
-  }
-
-  .submitBtn {
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 5px;
+  button {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
     border: none;
-    color: #fff;
-    background-color: #007bff;
+    color: #007bff;
     cursor: pointer;
-    transition: 0.3s;
+    font-size: 14px;
 
-    &:disabled {
-      background-color: #999;
-      cursor: not-allowed;
+    &:hover {
+      text-decoration: underline;
     }
+  }
+}
+
+.submitBtn {
+  padding: 12px;
+  font-size: 16px;
+  border-radius: 20px;
+  border: none;
+  color: #fff;
+  background: #007bff;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+  width: 200px;
+  text-align: center;
+
+  &:hover:not(:disabled) {
+    background: #0056b3;
+  }
+
+  &:disabled {
+    background: #999;
+    cursor: not-allowed;
   }
 }

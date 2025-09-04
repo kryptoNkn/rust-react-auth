@@ -48,18 +48,41 @@ export default function RegisterForm() {
   return (
     <>
       <form onSubmit={handleSubmit} className={s.formContainer}>
-        <input name="username" placeholder="Name" value={form.username} onChange={handleChange} />
-        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} />
-
-        <div className={s.passwordWrapper}>
-          <input name="password" type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={handleChange} />
-          <button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Hide" : "Show"}</button>
+        <div className={s.titles}>
+          <h1>Sign Up</h1>
+          <h3>Join the community today!</h3>
         </div>
 
-        <input name="confirmPassword" type="password" placeholder="Repeat password" value={form.confirmPassword} onChange={handleChange} />
+        <input 
+          name="username" 
+          placeholder="Username" 
+          value={form.username} 
+          onChange={handleChange} 
+        />
+        
+        <input 
+          name="email" 
+          type="email" 
+          placeholder="Email" 
+          value={form.email} 
+          onChange={handleChange} 
+        />
+
+        <div className={s.passwordWrapper}>
+          <input 
+            name="password" 
+            type={showPassword ? "text" : "password"} 
+            placeholder="Password" 
+            value={form.password} 
+            onChange={handleChange} 
+          />
+          <button type="button" onClick={() => setShowPassword(!showPassword)}>
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
         <button type="submit" className={s.submitBtn} disabled={loading}>
-          {loading ? "Registering..." : "Register"}
+          {loading ? "Registering..." : "Sign Up"}
         </button>
       </form>
 
