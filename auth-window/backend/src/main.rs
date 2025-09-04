@@ -53,7 +53,6 @@ async fn register(data: web::Json<RegisterData>) -> impl Responder {
     HttpResponse::Ok().json(serde_json::json!({
         "message": format!("User {} registered", data.username),
         "token": token,
-        "hashed_password": hashed_password
     }))
 }
 
