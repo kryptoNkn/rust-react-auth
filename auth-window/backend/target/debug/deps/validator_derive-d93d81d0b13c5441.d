@@ -1,0 +1,9 @@
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/deps/validator_derive-d93d81d0b13c5441.d: /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/lib.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/asserts.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/lit.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/quoting.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/validation.rs
+
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/deps/libvalidator_derive-d93d81d0b13c5441.dylib: /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/lib.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/asserts.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/lit.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/quoting.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/validation.rs
+
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/lib.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/asserts.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/lit.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/quoting.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/validator_derive-0.16.0/src/validation.rs:

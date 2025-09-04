@@ -1,16 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 import s from './RegisterForm.module.scss';
 
 export default function RegisterForm() {
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: ""
-  });
-
+  const [form, setForm] = useState({ username: "", email: "", password: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -26,10 +21,10 @@ export default function RegisterForm() {
     const trimmedUsername = form.username.trim();
     const trimmedEmail = form.email.trim();
 
-    if (trimmedUsername.length < 3) { toast.error("The name must be at least 3 characters long."); return; }
+    if (trimmedUsername.length < 3) { toast.error("Name must be at least 3 characters."); return; }
     if (!isValidEmail(trimmedEmail)) { toast.error("Incorrect email."); return; }
-    if (form.password.length < 6) { toast.error("Password must be at least 6 characters long."); return; }
-    if (form.password !== form.confirmPassword) { toast.error("The passwords do not match."); return; }
+    if (form.password.length < 6) { toast.error("Password must be at least 6 characters."); return; }
+    if (form.password !== form.confirmPassword) { toast.error("Passwords do not match."); return; }
 
     setLoading(true);
     try {
@@ -39,11 +34,12 @@ export default function RegisterForm() {
         password: form.password
       });
 
-      toast.success(res.data);
+      toast.success(res.data.message);
+      localStorage.setItem("token", res.data.token);
       setForm({ username: "", email: "", password: "", confirmPassword: "" });
 
     } catch (err: any) {
-      toast.error(err.response?.data || "Registration error.");
+      toast.error(err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : "Registration error.");
     } finally {
       setLoading(false);
     }
@@ -57,9 +53,7 @@ export default function RegisterForm() {
 
         <div className={s.passwordWrapper}>
           <input name="password" type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={handleChange} />
-          <button type="button" onClick={() => setShowPassword(!showPassword)}>
-            {showPassword ? "Hide" : "Show"}
-          </button>
+          <button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Hide" : "Show"}</button>
         </div>
 
         <input name="confirmPassword" type="password" placeholder="Repeat password" value={form.confirmPassword} onChange={handleChange} />
