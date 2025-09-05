@@ -33,7 +33,7 @@ export default function RegisterForm() {
         username: trimmedUsername,
         email: trimmedEmail,
         password: form.password,
-        confirm_password: form.confirmPassword // ключ совпадает с Rust
+        confirm_password: form.confirmPassword 
       });
 
       toast.success(res.data.message);
