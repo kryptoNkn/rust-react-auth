@@ -1,4 +1,4 @@
-use actix_web::{App, HttpServer, Responder, HttpResponse, post, web};
+use actix_web::{App, HttpServer, Responder, HttpResponse, post, web, Result};
 use actix_cors::Cors;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -29,50 +29,64 @@ struct Claims {
     exp: usize,
 }
 
+#[derive(Serialize)]
+struct RegisterResponse {
+    message: String,
+    user_id: String,
+    token: String,
+}
+
 #[post("/register")]
-async fn register(data: web::Json<RegisterData>) -> impl Responder {
+async fn register(data: web::Json<RegisterData>) -> Result<impl Responder> {
     if let Err(errors) = data.validate() {
-        return HttpResponse::BadRequest().json(
+        return Ok(HttpResponse::BadRequest().json(
             serde_json::json!({"errors": errors.field_errors()})
-        );
+        ));
     }
 
     if data.password != data.confirm_password {
-        return HttpResponse::BadRequest().json(
+        return Ok(HttpResponse::BadRequest().json(
             serde_json::json!({"errors": "Passwords do not match"})
-        );
+        ));
     }
 
-    // HASH
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
-    let hashed_password = argon2
-        .hash_password(data.password.as_bytes(), &salt)
-        .unwrap()
-        .to_string();
+    let hashed_password = match argon2.hash_password(data.password.as_bytes(), &salt) {
+        Ok(p) => p.to_string(),
+        Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to hash password")),
+    };
 
     let user_id = Uuid::new_v4().to_string();
 
     // JWT
     let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
     let claims = Claims { sub: user_id.clone(), exp };
-    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    let token = encode(
-        &Header::default(),
-        &claims,
-        &EncodingKey::from_secret(secret.as_bytes())
-    ).unwrap();
 
-    HttpResponse::Ok().json(serde_json::json!({
-        "message": format!("User {} registered", data.username),
-        "user_id": user_id,
-        "token": token,
-    }))
+    let secret = match env::var("JWT_SECRET") {
+        Ok(s) => s,
+        Err(_) => return Ok(HttpResponse::InternalServerError().body("JWT_SECRET not set")),
+    };
+
+    let token = match encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes())) {
+        Ok(t) => t,
+        Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to generate token")),
+    };
+
+
+    let response = RegisterResponse {
+        message: format!("User {} registered", data.username),
+        user_id,
+        token,
+    };
+
+    Ok(HttpResponse::Ok().json(response))
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
+
     HttpServer::new(|| {
         App::new()
             .wrap(
