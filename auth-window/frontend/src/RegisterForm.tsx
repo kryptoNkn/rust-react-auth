@@ -22,29 +22,18 @@ export default function RegisterForm() {
     const trimmedUsername = form.username.trim();
     const trimmedEmail = form.email.trim();
 
-    if (trimmedUsername.length < 3) {
-      toast.error("Name must be at least 3 characters.");
-      return;
-    }
-    if (!isValidEmail(trimmedEmail)) {
-      toast.error("Incorrect email.");
-      return;
-    }
-    if (form.password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      return;
-    }
-    if (form.password !== form.confirmPassword) {
-      toast.error("Passwords do not match.");
-      return;
-    }
+    if (trimmedUsername.length < 3) { toast.error("Name must be at least 3 characters."); return; }
+    if (!isValidEmail(trimmedEmail)) { toast.error("Incorrect email."); return; }
+    if (form.password.length < 6) { toast.error("Password must be at least 6 characters."); return; }
+    if (form.password !== form.confirmPassword) { toast.error("Passwords do not match."); return; }
 
     setLoading(true);
     try {
       const res = await axios.post("http://localhost:8080/register", {
         username: trimmedUsername,
         email: trimmedEmail,
-        password: form.password
+        password: form.password,
+        confirm_password: form.confirmPassword // ключ совпадает с Rust
       });
 
       toast.success(res.data.message);
@@ -68,45 +57,17 @@ export default function RegisterForm() {
           <h3>Join the community today!</h3>
         </div>
 
-        <input 
-          name="username" 
-          placeholder="Username" 
-          value={form.username} 
-          onChange={handleChange} 
-        />
-
-        <input 
-          name="email" 
-          type="email" 
-          placeholder="Email" 
-          value={form.email} 
-          onChange={handleChange} 
-        />
+        <input name="username" placeholder="Username" value={form.username} onChange={handleChange} />
+        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} />
 
         <div className={s.passwordWrapper}>
-          <input 
-            name="password" 
-            type={showPassword ? "text" : "password"} 
-            placeholder="Password" 
-            value={form.password} 
-            onChange={handleChange} 
-          />
-          <button type="button" onClick={() => setShowPassword(!showPassword)}>
-            {showPassword ? "Hide" : "Show"}
-          </button>
+          <input name="password" type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={handleChange} />
+          <button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Hide" : "Show"}</button>
         </div>
 
         <div className={s.passwordWrapper}>
-          <input 
-            name="confirmPassword" 
-            type={showConfirmPassword ? "text" : "password"} 
-            placeholder="Confirm Password" 
-            value={form.confirmPassword} 
-            onChange={handleChange} 
-          />
-          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-            {showConfirmPassword ? "Hide" : "Show"}
-          </button>
+          <input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password" value={form.confirmPassword} onChange={handleChange} />
+          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? "Hide" : "Show"}</button>
         </div>
 
         {form.confirmPassword && (
@@ -115,9 +76,7 @@ export default function RegisterForm() {
           </p>
         )}
 
-        <button type="submit" className={s.submitBtn} disabled={loading}>
-          {loading ? "Registering..." : "Sign Up"}
-        </button>
+        <button type="submit" className={s.submitBtn} disabled={loading}>{loading ? "Registering..." : "Sign Up"}</button>
       </form>
 
       <ToastContainer position="top-right" autoClose={3000} />
