@@ -8,6 +8,7 @@ export default function RegisterForm() {
   const [form, setForm] = useState({ username: "", email: "", password: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
@@ -21,10 +22,22 @@ export default function RegisterForm() {
     const trimmedUsername = form.username.trim();
     const trimmedEmail = form.email.trim();
 
-    if (trimmedUsername.length < 3) { toast.error("Name must be at least 3 characters."); return; }
-    if (!isValidEmail(trimmedEmail)) { toast.error("Incorrect email."); return; }
-    if (form.password.length < 6) { toast.error("Password must be at least 6 characters."); return; }
-    if (form.password !== form.confirmPassword) { toast.error("Passwords do not match."); return; }
+    if (trimmedUsername.length < 3) {
+      toast.error("Name must be at least 3 characters.");
+      return;
+    }
+    if (!isValidEmail(trimmedEmail)) {
+      toast.error("Incorrect email.");
+      return;
+    }
+    if (form.password.length < 6) {
+      toast.error("Password must be at least 6 characters.");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -45,6 +58,8 @@ export default function RegisterForm() {
     }
   };
 
+  const passwordsMatch = form.password && form.confirmPassword && form.password === form.confirmPassword;
+
   return (
     <>
       <form onSubmit={handleSubmit} className={s.formContainer}>
@@ -59,7 +74,7 @@ export default function RegisterForm() {
           value={form.username} 
           onChange={handleChange} 
         />
-        
+
         <input 
           name="email" 
           type="email" 
@@ -80,6 +95,25 @@ export default function RegisterForm() {
             {showPassword ? "Hide" : "Show"}
           </button>
         </div>
+
+        <div className={s.passwordWrapper}>
+          <input 
+            name="confirmPassword" 
+            type={showConfirmPassword ? "text" : "password"} 
+            placeholder="Confirm Password" 
+            value={form.confirmPassword} 
+            onChange={handleChange} 
+          />
+          <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+            {showConfirmPassword ? "Hide" : "Show"}
+          </button>
+        </div>
+
+        {form.confirmPassword && (
+          <p className={passwordsMatch ? s.successText : s.errorText}>
+            {passwordsMatch ? "Passwords match ✅" : "Passwords do not match ❌"}
+          </p>
+        )}
 
         <button type="submit" className={s.submitBtn} disabled={loading}>
           {loading ? "Registering..." : "Sign Up"}

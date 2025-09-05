@@ -9,6 +9,7 @@ use jsonwebtoken::{encode, Header, EncodingKey};
 use uuid::Uuid;
 use std::env;
 use dotenv::dotenv;
+use chrono::{Utc, Duration};
 
 #[derive(Debug, Deserialize, Validate)]
 struct RegisterData {
@@ -18,6 +19,8 @@ struct RegisterData {
     email: String,
     #[validate(length(min = 6))]
     password: String,
+    #[validate(length(min = 6))]
+    confirm_password: String,
 }
 
 #[derive(Serialize)]
@@ -34,6 +37,13 @@ async fn register(data: web::Json<RegisterData>) -> impl Responder {
         );
     }
 
+    if data.password != data.confirm_password {
+        return HttpResponse::BadRequest().json(
+            serde_json::json!({"errors": "Passwords do not match"})
+        );
+    }
+
+    // HASH
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
     let hashed_password = argon2
@@ -43,11 +53,9 @@ async fn register(data: web::Json<RegisterData>) -> impl Responder {
 
     let user_id = Uuid::new_v4().to_string();
 
-    // creating jwt
-    let claims = Claims {
-        sub: user_id.clone(),
-        exp: 10000000000,
-    };
+    // JWT
+    let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
+    let claims = Claims { sub: user_id.clone(), exp };
     let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
     let token = encode(
         &Header::default(),
