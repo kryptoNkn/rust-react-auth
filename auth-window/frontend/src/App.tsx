@@ -1,4 +1,4 @@
-import RegisterForm from "./RegisterForm";
+import RegisterForm from "./AuthForm";
 import s from "../src/App.module.scss";
 
 function App() {

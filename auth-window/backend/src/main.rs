@@ -8,9 +8,10 @@ use std::collections::HashMap;
 use std::env;
 use dotenv::dotenv;
 use chrono::{Utc, Duration};
-use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation, Algorithm};
 mod security;
 use security::{hash_password, verify_password};
+mod jwt;
+use jwt::{encode_token, decode_token, Claims};
 
 #[derive(Debug, Deserialize, Validate)]
 struct RegisterData {
@@ -28,12 +29,6 @@ struct RegisterData {
 struct LoginData {
     email: String,
     password: String,
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct Claims {
-    sub: String,
-    exp: usize,
 }
 
 #[derive(Serialize)]
@@ -74,7 +69,7 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
     let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
     let claims = Claims { sub: user_id.clone(), exp };
 
-    let token = match encode(&Header::new(Algorithm::HS256), &claims, &EncodingKey::from_secret(state.jwt_secret.as_bytes())) {
+    let token = match encode_token(&claims, &state.jwt_secret) {
         Ok(t) => t,
         Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to generate token")),
     };
@@ -114,7 +109,7 @@ async fn login(data: web::Json<LoginData>, state: web::Data<AppState>) -> Result
     let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
     let claims = Claims { sub: user.id.clone(), exp };
 
-    let token = match encode(&Header::new(Algorithm::HS256), &claims, &EncodingKey::from_secret(state.jwt_secret.as_bytes())) {
+    let token = match encode_token(&claims, &state.jwt_secret) {
         Ok(t) => t,
         Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to generate token")),
     };
@@ -134,7 +129,7 @@ async fn profile(req: HttpRequest, state: web::Data<AppState>) -> Result<impl Re
     };
 
     let token = auth_header.replace("Bearer ", "");
-    let decoded = decode::<Claims>(&token, &DecodingKey::from_secret(state.jwt_secret.as_bytes()), &Validation::new(Algorithm::HS256));
+    let decoded = decode_token(&token, &state.jwt_secret);
 
     match decoded {
         Ok(data) => Ok(HttpResponse::Ok().json(serde_json::json!({"message": "Protected route", "user_id": data.claims.sub}))),
