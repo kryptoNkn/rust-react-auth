@@ -5,7 +5,7 @@ use validator::Validate;
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
 use argon2::password_hash::{SaltString, PasswordHash};
 use rand_core::OsRng;
-use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation, TokenData};
+use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation};
 use uuid::Uuid;
 use std::sync::Mutex;
 use std::collections::HashMap;
@@ -31,7 +31,7 @@ struct LoginData {
     password: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct Claims {
     sub: String,
     exp: usize,
@@ -44,22 +44,27 @@ struct AuthResponse {
     token: String,
 }
 
+#[derive(Clone)]
+struct User {
+    id: String,
+    username: String,
+    email: String,
+    password_hash: String,
+}
+
 struct AppState {
-    users: Mutex<HashMap<String, (String, String)>>,
+    users: Mutex<HashMap<String, User>>,
+    jwt_secret: String,
 }
 
 #[post("/register")]
 async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> Result<impl Responder> {
     if let Err(errors) = data.validate() {
-        return Ok(HttpResponse::BadRequest().json(
-            serde_json::json!({"errors": errors.field_errors()})
-        ));
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({"errors": errors.field_errors()})));
     }
 
     if data.password != data.confirm_password {
-        return Ok(HttpResponse::BadRequest().json(
-            serde_json::json!({"errors": "Passwords do not match"})
-        ));
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({"errors": "Passwords do not match"})));
     }
 
     let salt = SaltString::generate(&mut OsRng);
@@ -73,21 +78,24 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
     let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
     let claims = Claims { sub: user_id.clone(), exp };
 
-    let secret = env::var("JWT_SECRET").unwrap_or_else(|_| {
-        let s = SaltString::generate(&mut OsRng);
-        s.as_str().to_string()
-    });
-
-    let token = match encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes())) {
+    let token = match encode(&Header::default(), &claims, &EncodingKey::from_secret(state.jwt_secret.as_bytes())) {
         Ok(t) => t,
         Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to generate token")),
     };
 
     let mut users = state.users.lock().unwrap();
     if users.contains_key(&data.email) {
-        return Ok(HttpResponse::BadRequest().body("User with this email already exists"));
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "User with this email already exists"})));
     }
-    users.insert(data.email.clone(), (data.username.clone(), hashed_password));
+
+    let user = User {
+        id: user_id.clone(),
+        username: data.username.clone(),
+        email: data.email.clone(),
+        password_hash: hashed_password,
+    };
+
+    users.insert(data.email.clone(), user);
 
     Ok(HttpResponse::Ok().json(AuthResponse {
         message: format!("User {} registered", data.username),
@@ -99,62 +107,64 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
 #[post("/login")]
 async fn login(data: web::Json<LoginData>, state: web::Data<AppState>) -> Result<impl Responder> {
     let users = state.users.lock().unwrap();
-    let (username, hashed_password) = match users.get(&data.email) {
+    let user = match users.get(&data.email) {
         Some(u) => u,
-        None => return Ok(HttpResponse::BadRequest().body("Invalid email or password")),
+        None => return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "Invalid email or password"}))),
     };
 
-    let parsed_hash = PasswordHash::new(&hashed_password).unwrap();
+    let parsed_hash = PasswordHash::new(&user.password_hash).unwrap();
     let argon2 = Argon2::default();
     if argon2.verify_password(data.password.as_bytes(), &parsed_hash).is_err() {
-        return Ok(HttpResponse::BadRequest().body("Invalid email or password"));
+        return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "Invalid email or password"})));
     }
 
-    let user_id = Uuid::new_v4().to_string();
     let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
-    let claims = Claims { sub: user_id.clone(), exp };
-    let secret = env::var("JWT_SECRET").unwrap_or_else(|_| {
-        let s = SaltString::generate(&mut OsRng);
-        s.as_str().to_string()
-    });
-    let token = match encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes())) {
+    let claims = Claims { sub: user.id.clone(), exp };
+
+    let token = match encode(&Header::default(), &claims, &EncodingKey::from_secret(state.jwt_secret.as_bytes())) {
         Ok(t) => t,
         Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to generate token")),
     };
 
     Ok(HttpResponse::Ok().json(AuthResponse {
-        message: format!("User {} logged in", username),
-        user_id,
+        message: format!("User {} logged in", user.username),
+        user_id: user.id.clone(),
         token,
     }))
 }
 
 #[get("/profile")]
-async fn profile(req: HttpRequest) -> Result<impl Responder> {
-    let secret = env::var("JWT_SECRET").unwrap_or_else(|_| "secretkey".into());
-    let auth_header = req.headers().get("Authorization");
+async fn profile(req: HttpRequest, state: web::Data<AppState>) -> Result<impl Responder> {
+    let auth_header = match req.headers().get("Authorization") {
+        Some(h) => h.to_str().unwrap_or(""),
+        None => return Ok(HttpResponse::Unauthorized().json(serde_json::json!({"error": "Missing Authorization header"}))),
+    };
 
-    if auth_header.is_none() {
-        return Ok(HttpResponse::Unauthorized().body("Missing Authorization header"));
-    }
+    let token = auth_header.replace("Bearer ", "");
 
-    let token = auth_header.unwrap().to_str().unwrap().replace("Bearer ", "");
-    let decoded = decode::<Claims>(&token, &DecodingKey::from_secret(secret.as_bytes()), &Validation::default());
+    let decoded = decode::<Claims>(
+        &token,
+        &DecodingKey::from_secret(state.jwt_secret.as_bytes()),
+        &Validation::default(),
+    );
 
     match decoded {
         Ok(data) => Ok(HttpResponse::Ok().json(serde_json::json!({
             "message": "This is a protected route",
             "user_id": data.claims.sub
         }))),
-        Err(_) => Ok(HttpResponse::Unauthorized().body("Invalid token")),
+        Err(_) => Ok(HttpResponse::Unauthorized().json(serde_json::json!({"error": "Invalid token"}))),
     }
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
+    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set in .env");
+
     let state = web::Data::new(AppState {
         users: Mutex::new(HashMap::new()),
+        jwt_secret,
     });
 
     HttpServer::new(move || {
