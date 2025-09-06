@@ -8,12 +8,9 @@ use std::collections::HashMap;
 use std::env;
 use dotenv::dotenv;
 use chrono::{Utc, Duration};
-
+use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation, Algorithm};
 mod security;
-mod jwt;
-
 use security::{hash_password, verify_password};
-use jwt::{create_token, decode_token, Claims};
 
 #[derive(Debug, Deserialize, Validate)]
 struct RegisterData {
@@ -31,6 +28,12 @@ struct RegisterData {
 struct LoginData {
     email: String,
     password: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Claims {
+    sub: String,
+    exp: usize,
 }
 
 #[derive(Serialize)]
@@ -55,7 +58,6 @@ struct AppState {
 
 #[post("/register")]
 async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> Result<impl Responder> {
-    // Валидация
     if let Err(errors) = data.validate() {
         return Ok(HttpResponse::BadRequest().json(serde_json::json!({"errors": errors.field_errors()})));
     }
@@ -69,6 +71,13 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
     };
 
     let user_id = Uuid::new_v4().to_string();
+    let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
+    let claims = Claims { sub: user_id.clone(), exp };
+
+    let token = match encode(&Header::new(Algorithm::HS256), &claims, &EncodingKey::from_secret(state.jwt_secret.as_bytes())) {
+        Ok(t) => t,
+        Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to generate token")),
+    };
 
     let mut users = state.users.lock().unwrap();
     if users.contains_key(&data.email) {
@@ -82,12 +91,6 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
         password_hash: hashed_password,
     };
     users.insert(data.email.clone(), user);
-
-    let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
-    let token = match create_token(&user_id, &state.jwt_secret, exp) {
-        Ok(t) => t,
-        Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to generate token")),
-    };
 
     Ok(HttpResponse::Ok().json(AuthResponse {
         message: format!("User {} registered", data.username),
@@ -109,7 +112,9 @@ async fn login(data: web::Json<LoginData>, state: web::Data<AppState>) -> Result
     }
 
     let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
-    let token = match create_token(&user.id, &state.jwt_secret, exp) {
+    let claims = Claims { sub: user.id.clone(), exp };
+
+    let token = match encode(&Header::new(Algorithm::HS256), &claims, &EncodingKey::from_secret(state.jwt_secret.as_bytes())) {
         Ok(t) => t,
         Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to generate token")),
     };
@@ -129,7 +134,7 @@ async fn profile(req: HttpRequest, state: web::Data<AppState>) -> Result<impl Re
     };
 
     let token = auth_header.replace("Bearer ", "");
-    let decoded = decode_token(&token, &state.jwt_secret);
+    let decoded = decode::<Claims>(&token, &DecodingKey::from_secret(state.jwt_secret.as_bytes()), &Validation::new(Algorithm::HS256));
 
     match decoded {
         Ok(data) => Ok(HttpResponse::Ok().json(serde_json::json!({"message": "Protected route", "user_id": data.claims.sub}))),
