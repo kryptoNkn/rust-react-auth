@@ -28,3 +28,6 @@ cd frontend
 npm install
 npm run dev
 ```
+
+I created this project by combining my programming knowledge with help from ChatGPT.
+I plan to periodically improve it by adding new features such as refresh tokens, database integration, user roles, and a more advanced UI.
