@@ -63,13 +63,11 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
         return Ok(HttpResponse::BadRequest().json(serde_json::json!({"errors": "Passwords do not match"})));
     }
 
-    // Хешируем пароль
     let hashed_password = match hash_password(&data.password) {
         Ok(h) => h,
         Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to hash password")),
     };
 
-    // Создаем пользователя
     let user_id = Uuid::new_v4().to_string();
 
     let mut users = state.users.lock().unwrap();
@@ -85,7 +83,6 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
     };
     users.insert(data.email.clone(), user);
 
-    // Генерация токена
     let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
     let token = match create_token(&user_id, &state.jwt_secret, exp) {
         Ok(t) => t,
