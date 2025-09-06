@@ -1,17 +1,16 @@
-use actix_web::{App, HttpServer, Responder, HttpResponse, post, get, web, Result, HttpRequest};
+use actix_web::{App, HttpServer, HttpResponse, Responder, post, get, web, Result, HttpRequest};
 use actix_cors::Cors;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use argon2::{Argon2, PasswordHasher, PasswordVerifier};
-use argon2::password_hash::{SaltString, PasswordHash};
-use rand_core::OsRng;
-use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation};
 use uuid::Uuid;
 use std::sync::Mutex;
 use std::collections::HashMap;
 use std::env;
 use dotenv::dotenv;
 use chrono::{Utc, Duration};
+use jsonwebtoken::{encode, decode, Header, EncodingKey, DecodingKey, Validation};
+mod security;
+use security::{hash_password, verify_password};
 
 #[derive(Debug, Deserialize, Validate)]
 struct RegisterData {
@@ -62,17 +61,14 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
     if let Err(errors) = data.validate() {
         return Ok(HttpResponse::BadRequest().json(serde_json::json!({"errors": errors.field_errors()})));
     }
-
     if data.password != data.confirm_password {
         return Ok(HttpResponse::BadRequest().json(serde_json::json!({"errors": "Passwords do not match"})));
     }
 
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
-    let hashed_password = argon2
-        .hash_password(data.password.as_bytes(), &salt)
-        .unwrap()
-        .to_string();
+    let hashed_password = match hash_password(&data.password) {
+        Ok(h) => h,
+        Err(_) => return Ok(HttpResponse::InternalServerError().body("Failed to hash password")),
+    };
 
     let user_id = Uuid::new_v4().to_string();
     let exp = (Utc::now() + Duration::days(7)).timestamp() as usize;
@@ -94,7 +90,6 @@ async fn register(data: web::Json<RegisterData>, state: web::Data<AppState>) -> 
         email: data.email.clone(),
         password_hash: hashed_password,
     };
-
     users.insert(data.email.clone(), user);
 
     Ok(HttpResponse::Ok().json(AuthResponse {
@@ -112,9 +107,7 @@ async fn login(data: web::Json<LoginData>, state: web::Data<AppState>) -> Result
         None => return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "Invalid email or password"}))),
     };
 
-    let parsed_hash = PasswordHash::new(&user.password_hash).unwrap();
-    let argon2 = Argon2::default();
-    if argon2.verify_password(data.password.as_bytes(), &parsed_hash).is_err() {
+    if !verify_password(&data.password, &user.password_hash) {
         return Ok(HttpResponse::BadRequest().json(serde_json::json!({"error": "Invalid email or password"})));
     }
 
@@ -141,18 +134,10 @@ async fn profile(req: HttpRequest, state: web::Data<AppState>) -> Result<impl Re
     };
 
     let token = auth_header.replace("Bearer ", "");
-
-    let decoded = decode::<Claims>(
-        &token,
-        &DecodingKey::from_secret(state.jwt_secret.as_bytes()),
-        &Validation::default(),
-    );
+    let decoded = decode::<Claims>(&token, &DecodingKey::from_secret(state.jwt_secret.as_bytes()), &Validation::default());
 
     match decoded {
-        Ok(data) => Ok(HttpResponse::Ok().json(serde_json::json!({
-            "message": "This is a protected route",
-            "user_id": data.claims.sub
-        }))),
+        Ok(data) => Ok(HttpResponse::Ok().json(serde_json::json!({"message": "Protected route", "user_id": data.claims.sub}))),
         Err(_) => Ok(HttpResponse::Unauthorized().json(serde_json::json!({"error": "Invalid token"}))),
     }
 }
@@ -170,11 +155,7 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(state.clone())
-            .wrap(Cors::default()
-                .allow_any_origin()
-                .allow_any_method()
-                .allow_any_header()
-            )
+            .wrap(Cors::default().allow_any_origin().allow_any_method().allow_any_header())
             .service(register)
             .service(login)
             .service(profile)
