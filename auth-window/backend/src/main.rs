@@ -1,6 +1,7 @@
 use actix_web::{App, HttpServer, HttpResponse, Responder, post, get, web, Result, HttpRequest};
 use actix_cors::Cors;
 use serde::{Deserialize, Serialize};
+use validator_derive::Validate;
 use validator::Validate;
 use uuid::Uuid;
 use std::sync::Mutex;
@@ -8,8 +9,10 @@ use std::collections::HashMap;
 use std::env;
 use dotenv::dotenv;
 use chrono::{Utc, Duration};
+
 mod security;
 use security::{hash_password, verify_password};
+
 mod jwt;
 use jwt::{encode_token, decode_token, Claims};
 
@@ -146,6 +149,8 @@ async fn main() -> std::io::Result<()> {
         users: Mutex::new(HashMap::new()),
         jwt_secret,
     });
+
+    println!("Server running at http://127.0.0.1:8080");
 
     HttpServer::new(move || {
         App::new()

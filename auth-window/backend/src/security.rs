@@ -1,6 +1,6 @@
 use argon2::{Argon2, PasswordHasher, PasswordVerifier};
 use argon2::password_hash::{SaltString, PasswordHash};
-use rand_core::OsRng;
+use rand_core::OsRng; 
 
 pub fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
     let salt = SaltString::generate(&mut OsRng);

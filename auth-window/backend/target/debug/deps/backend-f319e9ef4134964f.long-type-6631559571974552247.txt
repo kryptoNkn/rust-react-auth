@@ -1,2 +1,0 @@
-fn(HttpRequest, actix_web::web::Data<AppState>) -> impl std::future::Future<Output = Result<impl Responder, actix_web::Error>> {profile}
-fn(HttpRequest, actix_web::web::Data<AppState>) -> impl std::future::Future<Output = Result<impl Responder, actix_web::Error>> {profile}: HttpServiceFactory

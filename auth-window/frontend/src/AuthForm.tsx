@@ -48,42 +48,49 @@ export default function AuthForm() {
     e.preventDefault();
     setLoading(true);
 
-    if (isLogin) {
-      const trimmedEmail = loginForm.email.trim();
-      if (!isValidEmail(trimmedEmail)) { toast.error("Incorrect email."); setLoading(false); return; }
-      if (loginForm.password.length < 6) { toast.error("Password must be at least 6 characters."); setLoading(false); return; }
+    try {
+      if (isLogin) {
+        const trimmedEmail = loginForm.email.trim();
+        if (!isValidEmail(trimmedEmail)) { toast.error("Incorrect email."); setLoading(false); return; }
+        if (loginForm.password.length < 6) { toast.error("Password must be at least 6 characters."); setLoading(false); return; }
 
-      try {
         const res = await axios.post("http://localhost:8080/login", { email: trimmedEmail, password: loginForm.password });
         toast.success(res.data.message);
         localStorage.setItem("token", res.data.token);
         setLoginForm({ email: "", password: "" });
-      } catch (err: any) {
-        toast.error(err.response?.data?.error || "Login error.");
-      } finally { setLoading(false); }
 
-    } else {
-      const trimmedUsername = registerForm.username.trim();
-      const trimmedEmail = registerForm.email.trim();
-      if (trimmedUsername.length < 3) { toast.error("Name must be at least 3 characters."); setLoading(false); return; }
-      if (!isValidEmail(trimmedEmail)) { toast.error("Incorrect email."); setLoading(false); return; }
-      if (registerForm.password.length < 6) { toast.error("Password must be at least 6 characters."); setLoading(false); return; }
-      if (registerForm.password !== registerForm.confirmPassword) { toast.error("Passwords do not match."); setLoading(false); return; }
+      } else {
+        const trimmedUsername = registerForm.username.trim();
+        const trimmedEmail = registerForm.email.trim();
+        if (trimmedUsername.length < 3) { toast.error("Name must be at least 3 characters."); setLoading(false); return; }
+        if (!isValidEmail(trimmedEmail)) { toast.error("Incorrect email."); setLoading(false); return; }
+        if (registerForm.password.length < 6) { toast.error("Password must be at least 6 characters."); setLoading(false); return; }
+        if (registerForm.password !== registerForm.confirmPassword) { toast.error("Passwords do not match."); setLoading(false); return; }
 
-      try {
         const res = await axios.post("http://localhost:8080/register", {
           username: trimmedUsername,
           email: trimmedEmail,
           password: registerForm.password,
-          confirm_password: registerForm.confirmPassword,
+          confirm_password: registerForm.confirmPassword, // теперь точно совпадает с Rust
         });
+
         toast.success(res.data.message);
         localStorage.setItem("token", res.data.token);
         setRegisterForm({ username: "", email: "", password: "", confirmPassword: "" });
         setIsLogin(true);
-      } catch (err: any) {
-        toast.error(err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : "Registration error.");
-      } finally { setLoading(false); }
+      }
+
+    } catch (err: any) {
+      if (err.response?.data?.errors) {
+        const messages = Object.entries(err.response.data.errors).map(([key, val]) => `${key}: ${JSON.stringify(val)}`);
+        toast.error(messages.join("\n"));
+      } else if (err.response?.data?.error) {
+        toast.error(err.response.data.error);
+      } else {
+        toast.error("Something went wrong.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
