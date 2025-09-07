@@ -38,7 +38,7 @@ Create a `.env` file in the `backend` folder:
 ```env
 DATABASE_URL=postgres://username:password@localhost/auth_db
 JWT_SECRET=your_secret_key
-
+```
 
 ## 📝 API Endpoints
 
