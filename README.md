@@ -5,8 +5,9 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Actix Web](https://img.shields.io/badge/Actix_Web-000000?style=for-the-badge&logo=rust&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 
-A fullstack authentication and registration app built with **Rust + Actix Web** for the backend and **React + TypeScript** for the frontend.
+A fullstack authentication and registration app built with **Rust + Actix Web** for the backend and **React + TypeScript** for the frontend, now with **database support**.
 
 ---
 
@@ -16,7 +17,7 @@ A fullstack authentication and registration app built with **Rust + Actix Web** 
 - Login with email and password  
 - JWT token generation for authentication  
 - Protected `/profile` route, accessible only with a valid token  
-- In-memory storage (with database integration ready)  
+- Database integration (Postgres / SQLite, previously in-memory)  
 - Single frontend form (`AuthForm`) for login and registration  
 - Token temporarily stored in `localStorage`  
 
@@ -24,9 +25,9 @@ A fullstack authentication and registration app built with **Rust + Actix Web** 
 
 ## 🛠 Technologies
 
-**Backend:** Rust, Actix Web, JWT, Argon2, Validator, UUID, dotenv, chrono  
+**Backend:** Rust, Actix Web, JWT, Argon2, Validator, UUID, dotenv, chrono, SQLx  
 **Frontend:** React, TypeScript, Axios, React Toastify, SCSS  
-**Database:** Currently in-memory; can be swapped with SQLite, Postgres, or other DB  
+**Database:** PostgreSQL (default) or SQLite  
 
 ---
 
@@ -35,8 +36,8 @@ A fullstack authentication and registration app built with **Rust + Actix Web** 
 Create a `.env` file in the `backend` folder:
 
 ```env
+DATABASE_URL=postgres://username:password@localhost/auth_db
 JWT_SECRET=your_secret_key
-```
 
 
 ## 📝 API Endpoints
@@ -137,4 +138,3 @@ npm run dev
 ```
 
 I created this project by combining my programming knowledge with help from ChatGPT.
-I plan to periodically improve it by adding new features such as refresh tokens, database integration, user roles, and a more advanced UI.
