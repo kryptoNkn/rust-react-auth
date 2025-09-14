@@ -93,7 +93,7 @@ async fn register(data: web::Json<RegisterInput>, pool: web::Data<PgPool>) -> im
         .path("/")
         .http_only(true)
         .same_site(SameSite::Lax)
-        .secure(false) // в проде поставить true!
+        .secure(true)
         .finish();
 
     HttpResponse::Ok()
@@ -122,7 +122,7 @@ async fn login(data: web::Json<LoginInput>, pool: web::Data<PgPool>) -> impl Res
                 .path("/")
                 .http_only(true)
                 .same_site(SameSite::Lax)
-                .secure(false) // в проде поставить true!
+                .secure(true)
                 .finish();
 
             return HttpResponse::Ok()
