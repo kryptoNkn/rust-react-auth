@@ -1,5 +1,8 @@
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer, Responder, HttpResponse, post, get};
+use actix_web::{
+    web, App, HttpServer, Responder, HttpResponse, post, get, HttpRequest
+};
+use actix_web::cookie::{Cookie, SameSite};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, FromRow};
 use uuid::Uuid;
@@ -42,7 +45,6 @@ struct User {
 struct AuthResponse {
     message: String,
     user_id: Uuid,
-    token: String,
 }
 
 fn generate_jwt(user_id: &Uuid, secret: &str) -> String {
@@ -62,7 +64,13 @@ async fn register(data: web::Json<RegisterInput>, pool: web::Data<PgPool>) -> im
 
     let user_id = Uuid::new_v4();
     let argon2 = Argon2::default();
-    let password_hash = argon2.hash_password(data.password.as_bytes(), &argon2::password_hash::SaltString::generate(&mut rand_core::OsRng)).unwrap().to_string();
+    let password_hash = argon2
+        .hash_password(
+            data.password.as_bytes(),
+            &argon2::password_hash::SaltString::generate(&mut rand_core::OsRng)
+        )
+        .unwrap()
+        .to_string();
 
     let result = sqlx::query!(
         "INSERT INTO users (id, username, email, password_hash) VALUES ($1, $2, $3, $4)",
@@ -81,11 +89,19 @@ async fn register(data: web::Json<RegisterInput>, pool: web::Data<PgPool>) -> im
     let secret = env::var("JWT_SECRET").unwrap();
     let token = generate_jwt(&user_id, &secret);
 
-    HttpResponse::Ok().json(AuthResponse {
-        message: format!("User {} registered", data.username),
-        user_id,
-        token,
-    })
+    let cookie = Cookie::build("auth_token", token.clone())
+        .path("/")
+        .http_only(true)
+        .same_site(SameSite::Lax)
+        .secure(false) // в проде поставить true!
+        .finish();
+
+    HttpResponse::Ok()
+        .cookie(cookie)
+        .json(AuthResponse {
+            message: format!("User {} registered", data.username),
+            user_id,
+        })
 }
 
 #[post("/login")]
@@ -102,11 +118,19 @@ async fn login(data: web::Json<LoginInput>, pool: web::Data<PgPool>) -> impl Res
             let secret = env::var("JWT_SECRET").unwrap();
             let token = generate_jwt(&user.id, &secret);
 
-            return HttpResponse::Ok().json(AuthResponse {
-                message: format!("User {} logged in", user.username),
-                user_id: user.id,
-                token,
-            });
+            let cookie = Cookie::build("auth_token", token.clone())
+                .path("/")
+                .http_only(true)
+                .same_site(SameSite::Lax)
+                .secure(false) // в проде поставить true!
+                .finish();
+
+            return HttpResponse::Ok()
+                .cookie(cookie)
+                .json(AuthResponse {
+                    message: format!("User {} logged in", user.username),
+                    user_id: user.id,
+                });
         }
     }
 
@@ -114,21 +138,21 @@ async fn login(data: web::Json<LoginInput>, pool: web::Data<PgPool>) -> impl Res
 }
 
 #[get("/profile")]
-async fn profile(req: actix_web::HttpRequest, pool: web::Data<PgPool>) -> impl Responder {
-    let auth_header = req.headers().get("Authorization");
-    if auth_header.is_none() {
-        return HttpResponse::Unauthorized().json(serde_json::json!({"error": "Missing Authorization header"}));
+async fn profile(req: HttpRequest, pool: web::Data<PgPool>) -> impl Responder {
+    let cookie = req.cookie("auth_token");
+    if cookie.is_none() {
+        return HttpResponse::Unauthorized().json(serde_json::json!({"error": "Missing auth cookie"}));
     }
 
-    let auth_header = auth_header.unwrap().to_str().unwrap();
-    if !auth_header.starts_with("Bearer ") {
-        return HttpResponse::Unauthorized().json(serde_json::json!({"error": "Invalid Authorization header"}));
-    }
-
-    let token = auth_header.trim_start_matches("Bearer ");
+    let token = cookie.unwrap().value().to_string();
     let secret = env::var("JWT_SECRET").unwrap();
 
-    let decoded = decode::<Claims>(&token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default());
+    let decoded = decode::<Claims>(
+        &token,
+        &DecodingKey::from_secret(secret.as_ref()),
+        &Validation::default()
+    );
+
     if let Ok(decoded) = decoded {
         let user_id = Uuid::parse_str(&decoded.claims.sub).unwrap();
 
