@@ -16,6 +16,11 @@ interface LoginData {
   password: string;
 }
 
+const api = axios.create({
+  baseURL: "http://localhost:8080",
+  withCredentials: true, 
+});
+
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
   const [registerForm, setRegisterForm] = useState<RegisterData>({
@@ -54,9 +59,8 @@ export default function AuthForm() {
         if (!isValidEmail(trimmedEmail)) { toast.error("Incorrect email."); setLoading(false); return; }
         if (loginForm.password.length < 6) { toast.error("Password must be at least 6 characters."); setLoading(false); return; }
 
-        const res = await axios.post("http://localhost:8080/login", { email: trimmedEmail, password: loginForm.password });
+        const res = await api.post("/login", { email: trimmedEmail, password: loginForm.password });
         toast.success(res.data.message);
-        localStorage.setItem("token", res.data.token);
         setLoginForm({ email: "", password: "" });
 
       } else {
@@ -67,15 +71,14 @@ export default function AuthForm() {
         if (registerForm.password.length < 6) { toast.error("Password must be at least 6 characters."); setLoading(false); return; }
         if (registerForm.password !== registerForm.confirmPassword) { toast.error("Passwords do not match."); setLoading(false); return; }
 
-        const res = await axios.post("http://localhost:8080/register", {
+        const res = await api.post("/register", {
           username: trimmedUsername,
           email: trimmedEmail,
           password: registerForm.password,
-          confirm_password: registerForm.confirmPassword, // теперь точно совпадает с Rust
+          confirm_password: registerForm.confirmPassword,
         });
 
         toast.success(res.data.message);
-        localStorage.setItem("token", res.data.token);
         setRegisterForm({ username: "", email: "", password: "", confirmPassword: "" });
         setIsLogin(true);
       }
