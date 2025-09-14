@@ -1,0 +1,1 @@
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/backend: /Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/src/main.rs

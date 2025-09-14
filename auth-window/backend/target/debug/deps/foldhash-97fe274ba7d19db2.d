@@ -1,0 +1,11 @@
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/deps/foldhash-97fe274ba7d19db2.d: /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/lib.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/fast.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/quality.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/seed.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/convenience.rs
+
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/deps/libfoldhash-97fe274ba7d19db2.rlib: /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/lib.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/fast.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/quality.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/seed.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/convenience.rs
+
+/Users/kryptonkn/Desktop/rust-react-auth/auth-window/backend/target/debug/deps/libfoldhash-97fe274ba7d19db2.rmeta: /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/lib.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/fast.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/quality.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/seed.rs /Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/convenience.rs
+
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/lib.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/fast.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/quality.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/seed.rs:
+/Users/kryptonkn/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/foldhash-0.1.5/src/convenience.rs:
