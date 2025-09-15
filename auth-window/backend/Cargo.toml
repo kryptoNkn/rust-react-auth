@@ -15,5 +15,5 @@ rand_core = "0.6"
 jsonwebtoken = { version = "9.3", default-features = false }
 chrono = { version = "0.4", features = ["serde"] }
 dotenv = "0.15"
-validator = "0.16"
+validator = { version = "0.16", features = ["derive"] }
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono"] }

@@ -4,27 +4,37 @@ use actix_web::cookie::{Cookie, SameSite};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, FromRow};
 use uuid::Uuid;
-use chrono::{Utc, Duration};
+use chrono::{Utc};
 use dotenv::dotenv;
 use std::env;
+use validator::Validate;
 
 mod security;
 mod jwt;
 
 use security::{hash_password, verify_password};
-use jwt::{generate_jwt, decode_token, Claims};
+use jwt::{generate_jwt, decode_token};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 struct RegisterInput {
+    #[validate(length(min = 3, message = "Username must be at least 3 characters"))]
     username: String,
+
+    #[validate(email(message = "Invalid email format"))]
     email: String,
+
+    #[validate(length(min = 6, message = "Password must be at least 6 characters"))]
     password: String,
+
     confirm_password: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 struct LoginInput {
+    #[validate(email(message = "Invalid email format"))]
     email: String,
+
+    #[validate(length(min = 6, message = "Password must be at least 6 characters"))]
     password: String,
 }
 
@@ -45,8 +55,38 @@ struct AuthResponse {
 
 #[post("/register")]
 async fn register(data: web::Json<RegisterInput>, pool: web::Data<PgPool>, secret: web::Data<String>) -> impl Responder {
+    
+    if let Err(e) = data.validate() {
+        let errors: Vec<String> = e.field_errors()
+            .iter()
+            .map(|(field, errs)| {
+                let msgs: Vec<String> = errs.iter()
+                    .filter_map(|err| err.message.clone())
+                    .map(|m| m.to_string())
+                    .collect();
+                format!("{}: {}", field, msgs.join(", "))
+            })
+            .collect();
+
+        return HttpResponse::BadRequest().json(serde_json::json!({
+            "error": "Validation failed",
+            "details": errors
+        }));
+    }
+
     if data.password != data.confirm_password {
         return HttpResponse::BadRequest().json(serde_json::json!({"error": "Passwords do not match"}));
+    }
+
+    let existing_user = sqlx::query_as::<_, User>(
+        "SELECT id, username, email, password_hash, created_at FROM users WHERE email = $1"
+    )
+    .bind(&data.email)
+    .fetch_optional(pool.get_ref())
+    .await;
+
+    if let Ok(Some(_)) = existing_user {
+        return HttpResponse::BadRequest().json(serde_json::json!({"error": "Email already registered"}));
     }
 
     let password_hash = match hash_password(&data.password) {
@@ -85,10 +125,31 @@ async fn register(data: web::Json<RegisterInput>, pool: web::Data<PgPool>, secre
 
 #[post("/login")]
 async fn login(data: web::Json<LoginInput>, pool: web::Data<PgPool>, secret: web::Data<String>) -> impl Responder {
-    let user = match sqlx::query_as::<_, User>("SELECT id, username, email, password_hash, created_at FROM users WHERE email = $1")
-        .bind(&data.email)
-        .fetch_optional(pool.get_ref())
-        .await
+
+    if let Err(e) = data.validate() {
+        let errors: Vec<String> = e.field_errors()
+            .iter()
+            .map(|(field, errs)| {
+                let msgs: Vec<String> = errs.iter()
+                    .filter_map(|err| err.message.clone())
+                    .map(|m| m.to_string())
+                    .collect();
+                format!("{}: {}", field, msgs.join(", "))
+            })
+            .collect();
+
+        return HttpResponse::BadRequest().json(serde_json::json!({
+            "error": "Validation failed",
+            "details": errors
+        }));
+    }
+
+    let user = match sqlx::query_as::<_, User>(
+        "SELECT id, username, email, password_hash, created_at FROM users WHERE email = $1"
+    )
+    .bind(&data.email)
+    .fetch_optional(pool.get_ref())
+    .await
     {
         Ok(opt) => opt,
         Err(_) => return HttpResponse::InternalServerError().json(serde_json::json!({"error": "DB error"})),
@@ -133,10 +194,12 @@ async fn profile(req: HttpRequest, pool: web::Data<PgPool>, secret: web::Data<St
         Err(_) => return HttpResponse::Unauthorized().json(serde_json::json!({"error": "Invalid token"})),
     };
 
-    let user = match sqlx::query_as::<_, User>("SELECT id, username, email, password_hash, created_at FROM users WHERE id = $1")
-        .bind(user_id)
-        .fetch_one(pool.get_ref())
-        .await
+    let user = match sqlx::query_as::<_, User>(
+        "SELECT id, username, email, password_hash, created_at FROM users WHERE id = $1"
+    )
+    .bind(user_id)
+    .fetch_one(pool.get_ref())
+    .await
     {
         Ok(u) => u,
         Err(_) => return HttpResponse::Unauthorized().json(serde_json::json!({"error": "User not found"})),
