@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use serde::{Serialize, Deserialize};
+use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 use chrono::{Utc, Duration};
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey, TokenData};
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -18,10 +18,6 @@ pub fn generate_jwt(user_id: &Uuid, secret: &str) -> String {
     encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref())).unwrap()
 }
 
-pub fn decode_token(token: &str, secret: &str) -> Result<TokenData<Claims>, jsonwebtoken::errors::Error> {
-    decode::<Claims>(
-        token,
-        &DecodingKey::from_secret(secret.as_ref()),
-        &Validation::default()
-    )
+pub fn decode_token(token: &str, secret: &str) -> Result<jsonwebtoken::TokenData<Claims>, jsonwebtoken::errors::Error> {
+    decode::<Claims>(token, &DecodingKey::from_secret(secret.as_ref()), &Validation::default())
 }
