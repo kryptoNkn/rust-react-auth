@@ -7,12 +7,13 @@ use uuid::Uuid;
 use dotenv::dotenv;
 use env_logger;
 use std::env;
+use time::Duration; // импорт для max_age
 
 mod security;
 mod jwt;
 
 use security::{hash_password, verify_password};
-use jwt::{generate_jwt, decode_token, Claims};
+use jwt::{generate_jwt, decode_token};
 
 #[derive(Debug, Deserialize)]
 struct RegisterInput {
@@ -81,7 +82,7 @@ async fn register(
         .http_only(true)
         .same_site(SameSite::Strict)
         .secure(true)
-        .max_age(time::Duration::hours(24))
+        .max_age(Duration::hours(24))
         .domain("127.0.0.1")
         .finish();
 
@@ -117,7 +118,7 @@ async fn login(
                 .http_only(true)
                 .same_site(SameSite::Strict)
                 .secure(true)
-                .max_age(time::Duration::hours(24))
+                .max_age(Duration::hours(24))
                 .domain("127.0.0.1")
                 .finish();
 
