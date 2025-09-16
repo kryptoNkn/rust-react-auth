@@ -312,6 +312,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "jsonwebtoken",
+ "lazy_static",
  "log",
  "rand_core 0.6.4",
  "serde",

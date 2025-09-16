@@ -7,7 +7,11 @@ use uuid::Uuid;
 use dotenv::dotenv;
 use env_logger;
 use std::env;
-use time::Duration; // импорт для max_age
+use time::Duration;
+use std::sync::Mutex;
+use std::collections::HashMap;
+use std::time::SystemTime;
+use lazy_static::lazy_static;
 
 mod security;
 mod jwt;
@@ -47,6 +51,32 @@ struct AuthResponse {
 fn format_error(message: &str) -> serde_json::Value {
     serde_json::json!({ "error": true, "message": message })
 }
+
+// ======== Brute-force protection ========
+lazy_static::lazy_static! {
+    static ref LOGIN_ATTEMPTS: Mutex<HashMap<String, (u8, SystemTime)>> = Mutex::new(HashMap::new());
+}
+
+fn check_login_attempts(email: &str) -> bool {
+    let mut attempts = LOGIN_ATTEMPTS.lock().unwrap();
+    let now = SystemTime::now();
+    let entry = attempts.entry(email.to_string()).or_insert((0, now));
+
+    if now.duration_since(entry.1).unwrap().as_secs() > 900 {
+        *entry = (0, now);
+    }
+
+    entry.0 < 5
+}
+
+fn record_login_attempt(email: &str) {
+    let mut attempts = LOGIN_ATTEMPTS.lock().unwrap();
+    let now = SystemTime::now();
+    let entry = attempts.entry(email.to_string()).or_insert((0, now));
+    entry.0 += 1;
+    entry.1 = now;
+}
+// =======================================
 
 #[post("/register")]
 async fn register(
@@ -100,6 +130,10 @@ async fn login(
     pool: web::Data<PgPool>,
     secret: web::Data<String>
 ) -> impl Responder {
+    if !check_login_attempts(&data.email) {
+        return HttpResponse::TooManyRequests().json(format_error("Too many login attempts. Try again later."));
+    }
+
     let user = match sqlx::query_as::<_, User>("SELECT * FROM users WHERE email = $1")
         .bind(&data.email)
         .fetch_optional(pool.get_ref())
@@ -130,6 +164,8 @@ async fn login(
                 });
         }
     }
+
+    record_login_attempt(&data.email);
 
     HttpResponse::Unauthorized().json(format_error("Invalid email or password"))
 }
