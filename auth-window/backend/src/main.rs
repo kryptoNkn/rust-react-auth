@@ -70,8 +70,8 @@ async fn register(
     .execute(pool.get_ref())
     .await;
 
-    if let Err(err) = result {
-        return HttpResponse::InternalServerError().json(format_error(&format!("DB error: {}", err)));
+    if let Err(_) = result {
+        return HttpResponse::InternalServerError().json(format_error("Internal server error"));
     }
 
     let token = generate_jwt(&user_id, secret.get_ref());
@@ -79,8 +79,10 @@ async fn register(
     let cookie = Cookie::build("auth_token", token.clone())
         .path("/")
         .http_only(true)
-        .same_site(SameSite::Lax)
+        .same_site(SameSite::Strict)
         .secure(true)
+        .max_age(time::Duration::hours(24))
+        .domain("127.0.0.1")
         .finish();
 
     HttpResponse::Ok()
@@ -103,17 +105,20 @@ async fn login(
         .await
     {
         Ok(u) => u,
-        Err(_) => return HttpResponse::InternalServerError().json(format_error("DB error")),
+        Err(_) => return HttpResponse::InternalServerError().json(format_error("Internal server error")),
     };
 
     if let Some(user) = user {
         if verify_password(&data.password, &user.password_hash) {
             let token = generate_jwt(&user.id, secret.get_ref());
+
             let cookie = Cookie::build("auth_token", token.clone())
                 .path("/")
                 .http_only(true)
-                .same_site(SameSite::Lax)
+                .same_site(SameSite::Strict)
                 .secure(true)
+                .max_age(time::Duration::hours(24))
+                .domain("127.0.0.1")
                 .finish();
 
             return HttpResponse::Ok()
